@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private Button selectVideoButton;
     private VideoView videoView;
     private TextView Showresult;
+    public String buffet_txt;
+    public int[] arr_formodel=new int[4];
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -72,6 +73,77 @@ public class MainActivity extends AppCompatActivity {
             displayVideo(videoUri);
         }
     }
+    private void displayVideo(Uri videoUri) {
+
+/*
+        //We could change out video to buffer type and we showed in txt box
+        try {
+            buffet_txt=uriToByteBuffer_short(videoUri).toString();
+            Showresult.setText(buffet_txt);
+
+
+        }
+        catch (IOException e){
+            Showresult.setText(e.toString());
+
+        }
+        */
+
+        videoView.setVideoURI(videoUri);
+        videoView.setMediaController(new MediaController(this));
+        videoView.requestFocus();
+        videoView.start();
+        arr_formodel=new int[]{1, 10, 224, 224, 3};
+
+        // Do something with the selected video
+        try {
+            KerasModel model = KerasModel.newInstance(MainActivity.this);
+
+            // Creates inputs for reference.
+            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 10, 224, 224, 3}, DataType.FLOAT32);
+
+            inputFeature0.loadBuffer(uriToByteBuffer_short(videoUri),arr_formodel);
+
+            // Runs model inference and gets result.
+            KerasModel.Outputs outputs = model.process(inputFeature0);
+            TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
+
+            //Showresult.setText(outputFeature0.toString());
+
+
+
+            // Releases model resources if no longer used.
+            model.close();
+        } catch (IOException e) {
+            Showresult.setText(e.toString());
+
+        }
+
+
+
+
+/*
+        try {
+            playVideoFromByteBuffer(uriToByteBuffer(videoUri));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+*/
+
+
+/*
+
+        videoView.setVideoURI(videoUri);
+        videoView.setMediaController(new MediaController(this));
+        videoView.requestFocus();
+        videoView.start();
+*/
+
+
+
+    }
+
+
 
     public ByteBuffer uriToByteBuffer_short(Uri uri) throws IOException {
         InputStream inputStream = getContentResolver().openInputStream(uri);
@@ -122,8 +194,6 @@ public class MainActivity extends AppCompatActivity {
 
         return byteBufferr;
     }
-
-
     private void playVideoFromByteBuffer(ByteBuffer byteBuffer) {
         // Convert the ByteBuffer to a byte array
         byte[] bytes = new byte[byteBuffer.remaining()];
@@ -143,49 +213,4 @@ public class MainActivity extends AppCompatActivity {
     //İSTENİLEN BOYUTLARA ÖZGÜ BİR VİDEO TELEFONA İNDİRİP ONUN ÜZERİNDE MODEL TEST EDİLEBİLİR
 
 
-    private void displayVideo(Uri videoUri) {
-
-
-        // Do something with the selected video
-        try {
-            KerasModel model = KerasModel.newInstance(MainActivity.this);
-
-            // Creates inputs for reference.
-            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 10, 224, 224, 3}, DataType.FLOAT32);
-            inputFeature0.loadBuffer(uriToByteBuffer(videoUri));
-
-            // Runs model inference and gets result.
-            KerasModel.Outputs outputs = model.process(inputFeature0);
-            TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
-            Showresult.setText(outputFeature0.toString());
-
-
-
-            // Releases model resources if no longer used.
-            model.close();
-        } catch (IOException e) {
-            /* TODO Handle the exception */
-        }
-
-
-/*
-        try {
-            playVideoFromByteBuffer(uriToByteBuffer(videoUri));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-*/
-
-
-/*
-
-        videoView.setVideoURI(videoUri);
-        videoView.setMediaController(new MediaController(this));
-        videoView.requestFocus();
-        videoView.start();
-*/
-
-
-
-    }
 }
