@@ -1,5 +1,8 @@
 package com.pollub.firstandroidmlproject;
 
+//import static com.pollub.firstandroidmlproject.R.id.imageView;
+import static com.pollub.firstandroidmlproject.R.id.imageView_ss;
+
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -7,8 +10,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -39,20 +44,25 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_VIDEO_PICKER = 1;
 
-    private Button selectVideoButton;
-    private VideoView videoView;
-    private TextView Showresult;
-    public String buffet_txt;
+    Button selectVideoButton;
+     VideoView videoView;
+     TextView Showresult;
+     String buffet_txt;
+     ImageView ss_show;
     public int[] arr_formodel=new int[4];
+    private MediaMetadataRetriever retriever;
+    private Context context;
 
 
+    @SuppressLint("MissingInflatedId")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         selectVideoButton = findViewById(R.id.select_video_button);
         videoView = findViewById(R.id.video_view);
-        Showresult=findViewById(R.id.show_result);
+        Showresult = findViewById(R.id.show_result);
+        ss_show=findViewById(R.id.imageView_ss);
 
         selectVideoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,11 +76,67 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_VIDEO_PICKER && resultCode == RESULT_OK && data != null) {
-            Uri videoUri = data.getData();
+            if (requestCode == REQUEST_VIDEO_PICKER && resultCode == RESULT_OK && data != null) {
+                Uri videoUri = data.getData();
 
-            // Display the selected video
-            displayVideo(videoUri);
+
+                // Initialize the MediaMetadataRetriever
+                MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+                retriever.setDataSource(MainActivity.this, videoUri);
+
+                // Get a frame from the video
+                long timeUs = 3000000; // Choose the time (in microseconds) at which to extract the frame
+                Bitmap frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+
+                // Release the MediaMetadataRetriever
+                retriever.release();
+
+                // Display the screenshot in the ImageView
+
+                ss_show.setImageBitmap(frame);
+
+
+
+
+                /*
+
+
+                // Display the selected video
+                videoView.setVideoURI(videoUri);
+                videoView.setMediaController(new MediaController(this));
+                videoView.requestFocus();
+                videoView.start();
+                arr_formodel = new int[]{1, 10, 224, 224, 3};
+
+                 */
+
+            /*
+            // Do something with the selected video
+            try {
+                KerasModel model = KerasModel.newInstance(MainActivity.this);
+
+                // Creates inputs for reference.
+                TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 10, 224, 224, 3}, DataType.FLOAT32);
+
+                inputFeature0.loadBuffer(uriToByteBuffer_short(videoUri),arr_formodel);
+
+                // Runs model inference and gets result.
+                KerasModel.Outputs outputs = model.process(inputFeature0);
+                TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
+
+                //Showresult.setText(outputFeature0.toString());
+
+
+
+                // Releases model resources if no longer used.
+                model.close();
+            } catch (IOException e) {
+                Showresult.setText(e.toString());
+
+            }
+
+             */
+
         }
     }
     private void displayVideo(Uri videoUri) {
